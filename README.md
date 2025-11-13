@@ -1,87 +1,84 @@
-Here is a clean, modern, recruiter-friendly English README for your Tileset Manager project.
-It’s concise, professional, and clearly explains what the tool does + what’s coming next.
-You can copy-paste it directly into your README.md.
-
 🎨 Tileset Manager
 
-A small developer tool to import, preview, slice and prepare tilesets for Unity & 2D games.
+A simple tool to import, preview, and prepare tilesets for Unity and 2D games.
 
-🚀 Overview
+<p align="center"> <img src="https://img.shields.io/badge/React-18-61dafb?style=for-the-badge&logo=react&logoColor=black" /> <img src="https://img.shields.io/badge/Vite-Build-646cff?style=for-the-badge&logo=vite&logoColor=yellow" /> <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge" /> </p>
+📌 Overview
 
-Tileset Manager is a simple web tool that helps game developers quickly import a tileset image, visualize it, and prepare it for use in Unity, Godot, or other 2D engines.
+Tileset Manager is a lightweight web tool designed to make it easier to import tilesets, preview them, and eventually slice them for use in Unity, Godot, and other 2D engines.
 
-It’s built to be lightweight, fast, and easy to use — perfect for personal workflows or indie game projects.
+It’s built as a personal project to learn, experiment, and improve my workflow as a game developer.
 
-This is a side project I’m building to practice and improve my front-end development skills (React), while also creating something useful for my own game dev pipeline.
+✨ Features (v1)
 
-✨ Current Features (v1)
+🖼️ Drag & drop tileset import
 
-📁 Import a tileset via drag & drop or file selection
+📁 File browser support
 
-🎨 Clean and responsive UI
+🎨 Clean interface
 
-🖼️ Image preview area
+📱 Fully responsive
 
-⚛️ React + Vite project structure
+⚛️ Built with React + Vite
 
-🌓 Dark UI theme
+🌙 Dark theme
 
-🧱 Ready for tile slicing logic (coming next)
-
-🧩 Upcoming Features
-
-These will be part of the next commits:
-
-✂️ Automatic tile slicing based on tile size (16x16, 32x32, custom…)
-
-🔍 Zoom & grid overlay for precise editing
-
-💾 Export sliced tiles individually or as a sprite atlas
-
-🧰 Unity-ready metadata generation (.meta files helper)
-
-🗂️ Tileset manager with naming, folders, presets
-
-🎛️ Adjustable padding, spacing, and pivot
-
-🧪 “Test in grid” interactive preview
-
-🛠️ Tech Stack
-
-React 18
-
-Vite
-
-JavaScript (ES2023)
-
-CSS (custom)
-
-Drag & Drop API
-
-FileReader API
+⚠️ Slicing and export features are coming soon.
+This is only the very first version.
 
 📦 Installation
+<div align="center">
+🚀 Quick Start
 git clone https://github.com/ComiccSanss2/tileset-manager.git
 cd tileset-manager
 npm install
 npm run dev
 
-🧪 Running the Project
+</div>
+🧱 Project Structure
+tileset-manager/
+│
+├── public/
+├── src/
+│   ├── components/
+│   │   ├── Dropzone.jsx
+│   │   └── Preview.jsx
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── styles.css
+│
+└── README.md
 
-After npm run dev, open:
+🛠️ Tech Stack
+<div align="center">
+Category	Technologies
+Frontend	React 18, JavaScript (ES2023)
+Bundler	Vite
+UI	CSS, Drag & Drop API
+Tools	npm, GitHub
+</div>
+🗺️ Roadmap
+🔜 Coming Next
 
-http://localhost:5173/
+✂️ Tile slicing by size (16x16, 32x32, custom…)
 
+🔍 Zoom + grid overlay
 
-The app will reload automatically on file changes.
+💾 Export tiles individually
 
-🤝 Contributions
+🧰 Unity .meta generator
 
-This is a personal learning project, but suggestions are welcome.
-If you want to open an issue or propose a feature, feel free to do so!
+🎛️ Padding, spacing & tile offset controls
+
+🗂️ Tileset library system
+
+🤝 Contributing
+
+This is a personal learning project, but feedback is always appreciated.
+Feel free to open an issue or suggest improvements.
 
 👤 Author
 
 Hamza Ben Alouane
-Full-stack & mobile developer (React, Symfony, Android, Flutter)
-Game dev enthusiast — Unity / C#
+Full Stack & Mobile Developer → React, Symfony, Flutter, Android
+Game Dev Enthusiast → Unity / C#
