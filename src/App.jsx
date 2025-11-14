@@ -73,30 +73,30 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1 className="title">🎨 Tileset Manager</h1>
+        <h1 className="title">Tileset Manager</h1>
         <p className="subtitle">Import, slice and inspect your tilesets.</p>
       </header>
 
       <Dropzone setImage={setImage} />
 
-      {image && (
-        <>
-          <TileOptions
-            tileSize={tileSize}
-            setTileSize={setTileSize}
-            customSize={customSize}
-            setCustomSize={setCustomSize}
-            handleSlice={handleSlice}
-          />
+   {image && (
+  <div className="panels-row">
+    <TileOptions
+      tileSize={tileSize}
+      setTileSize={setTileSize}
+      customSize={customSize}
+      setCustomSize={setCustomSize}
+      handleSlice={handleSlice}
+    />
 
-          <ZoomControls
-            zoom={zoom}
-            setZoom={setZoom}
-            showGrid={showGrid}
-            setShowGrid={setShowGrid}
-          />
-        </>
-      )}
+    <ZoomControls
+      zoom={zoom}
+      setZoom={setZoom}
+      showGrid={showGrid}
+      setShowGrid={setShowGrid}
+    />
+  </div>
+)}
 
       {tiles.length > 0 && (
         <div className="workspace">

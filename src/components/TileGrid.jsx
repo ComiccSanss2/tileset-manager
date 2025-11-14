@@ -9,7 +9,7 @@ export default function TileGrid({
 }) {
   return (
     <div className="tile-grid-wrapper pixel-panel">
-      <h2>🧱 Tiles</h2>
+      <h2>Tiles</h2>
       <div
         className={`tile-grid ${showGrid ? "tile-grid--grid" : ""}`}
         style={{

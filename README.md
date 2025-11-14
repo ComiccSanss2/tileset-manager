@@ -1,4 +1,4 @@
-# 🎨 Tileset Manager
+#  Tileset Manager
 
 ### _Import, preview and prepare tilesets for Unity and 2D games._
 
@@ -6,7 +6,7 @@
 
 ---
 
-## 📘 Overview
+##  Overview
 
 Tileset Manager is a lightweight tool to import and preview tilesets before exporting or slicing them for 2D game engines such as Unity or Godot.
 
@@ -14,18 +14,18 @@ This first version includes UI, drag-and-drop import, and a clean layout.
 
 ---
 
-## ✨ Features (v1)
+##  Features (v1)
 
-- 🖼️ Drag & drop tileset import  
-- 📁 File chooser support  
-- 🎨 Clean and responsive UI  
-- ⚛️ Built with React 18 + Vite  
-- 🌙 Dark theme  
-- 🧱 Project structured for future slicing & export features  
+-  Drag & drop tileset import  
+-  File chooser support  
+-  Clean and responsive UI  
+-  Built with React 18 + Vite  
+-  Dark theme  
+-  Project structured for future slicing & export features  
 
 ---
 
-## 📦 Installation
+##  Installation
 
 ### 1. Clone the project
 
@@ -48,26 +48,7 @@ npm run dev
 
 ---
 
-## 📁 Project Structure
-
-```
-tileset-manager/
-│
-├── public/
-├── src/
-│   ├── components/
-│   │   ├── Dropzone.jsx
-│   │   └── Preview.jsx
-│   ├── App.jsx
-│   ├── main.jsx
-│   └── styles.css
-│
-└── README.md
-```
-
----
-
-## 🛠 Tech Stack
+##  Tech Stack
 
 - **Frontend:** React 18, JavaScript (ES2023)  
 - **Bundler:** Vite  
@@ -76,25 +57,25 @@ tileset-manager/
 
 ---
 
-## 🗺 Roadmap
+##  Roadmap
 
-- ✂️ Tile slicing by size (16×16, 32×32, custom)  
-- 🔍 Zoom and grid overlay  
-- 💾 Export tiles individually  
-- 🛠 Unity `.meta` generator  
-- ⚙️ Padding / spacing / offset controls  
-- 📚 Tileset library  
+-  Tile slicing by size (16×16, 32×32, custom)  
+-  Zoom and grid overlay  
+-  Export tiles individually  
+-  Unity `.meta` generator  
+-  Padding / spacing / offset controls  
+-  Tileset library  
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 This is a personal learning project, but feedback and suggestions are welcome.  
 Feel free to open an issue or share improvements.
 
 ---
 
-## 👤 Author
+##  Author
 
 **Hamza Ben Alouane**  
 Full Stack & Mobile Developer — React, Symfony, Flutter, Android  

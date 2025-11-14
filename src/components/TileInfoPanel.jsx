@@ -4,7 +4,7 @@ export default function TileInfoPanel({ tile, tileSize }) {
   if (!tile) {
     return (
       <div className="tile-info pixel-panel">
-        <h2>📋 Tile info</h2>
+        <h2>Tile info</h2>
         <p>Hover a tile in the grid to inspect it.</p>
       </div>
     );
@@ -15,7 +15,7 @@ export default function TileInfoPanel({ tile, tileSize }) {
 
   return (
     <div className="tile-info pixel-panel">
-      <h2>📋 Tile info</h2>
+      <h2>Tile info</h2>
       <ul>
         <li>
           <strong>Index:</strong> {tile.index}
