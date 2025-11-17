@@ -324,7 +324,7 @@ ${tiles
   if (showSplash) {
     return (
       <div className="splash-screen">
-        <img src="/assets/logo.png" alt="logo" className="splash-logo" />
+        <img src="./assets/logo.png" alt="logo" className="splash-logo" />
 
         <h1 className="splash-title">PIXENO</h1>
         <p className="splash-subtitle">Tileset Manager</p>
@@ -366,7 +366,7 @@ ${tiles
       <div className="app">
         <header className="app-header">
           <div className="app-logo-title">
-            <img src="/assets/logo.png" alt="logo" className="header-logo" />
+            <img src="./assets/logo.png" alt="logo" className="header-logo" />
             <h1 className="title">Tileset Manager</h1>
           </div>
 

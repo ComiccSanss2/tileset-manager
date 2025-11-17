@@ -1,16 +1,26 @@
-#  PIXENO — Tileset Manager
+#  PIXENO
 
 ### _A fast, modern and retro-styled tileset preparation tool for game developers._
 
-<p align="center"> <img src="https://img.shields.io/badge/React-18-61dafb?style=for-the-badge&logo=react&logoColor=black" /> <img src="https://img.shields.io/badge/Vite-Build-646cff?style=for-the-badge&logo=vite&logoColor=yellow" /> <img src="https://img.shields.io/badge/Status-Stable-green?style=for-the-badge" /> <img src="https://img.shields.io/badge/Hosted-GitHub%20Pages-blue?style=for-the-badge&logo=github" /> </p> <p align="center"> 🔗 **Live version:** https://comiccsanss2.github.io/tileset-manager </p>
+<p align="center"> <img src="https://img.shields.io/badge/React-18-61dafb?style=for-the-badge&logo=react&logoColor=black" /> <img src="https://img.shields.io/badge/Vite-Build-646cff?style=for-the-badge&logo=vite&logoColor=yellow" /> <img src="https://img.shields.io/badge/Status-Stable-green?style=for-the-badge" /> <img src="https://img.shields.io/badge/Hosted-GitHub%20Pages-blue?style=for-the-badge&logo=github" /> </p> <p align="center"> 🔗 **Live version:** https://comiccsanss2.github.io/Pixeno </p>
 
 ---
 
 ##  Overview
 
-Tileset Manager is a lightweight tool to import and preview tilesets before exporting or slicing them for 2D game engines such as Unity or Godot.
+PIXENO is a lightweight, fast and fully client-side tileset manager designed for 2D game developers.
 
-This first version includes UI, drag-and-drop import, and a clean layout.
+This tool helps you:
+
+Analyze tiles
+
+Slice tilesets
+
+Add collision metadata
+
+Export clean assets for engines like Unity and Godot
+
+Everything runs locally in your browser: no uploads, no backend, no tracking.
 
 ---
 
