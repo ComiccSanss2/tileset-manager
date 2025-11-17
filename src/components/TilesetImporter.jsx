@@ -23,7 +23,7 @@ export default function TilesetImporter() {
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
         >
-          <p>Dépose ton tileset ici ou clique pour importer</p>
+          <p>Drop your tileset here or click to upload</p>
           <input
             type="file"
             accept="image/*"

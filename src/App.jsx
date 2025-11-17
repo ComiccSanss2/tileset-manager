@@ -9,6 +9,8 @@ import "./styles.css";
 
 export default function App() {
   const [image, setImage] = useState(null);
+  const [imageObj, setImageObj] = useState(null);
+
   const [tiles, setTiles] = useState([]);
   const [tileSize, setTileSize] = useState(16);
   const [customSize, setCustomSize] = useState(16);
@@ -20,8 +22,13 @@ export default function App() {
   const [selectedTile, setSelectedTile] = useState(null);
 
   const [collisions, setCollisions] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  // Charger le thème à partir du localStorage
+  const [errorMessage, setErrorMessage] = useState(null);
+
+  /* ======================================================
+     THEME LOAD
+  ====================================================== */
   useEffect(() => {
     const saved = localStorage.getItem("gba-theme");
     if (saved === "light") {
@@ -29,74 +36,128 @@ export default function App() {
     }
   }, []);
 
-  /* ================================
-      TILE SLICING
-  ================================== */
-  const handleSlice = () => {
-    if (!image) return;
+  /* ======================================================
+     ERROR TOAST
+  ====================================================== */
+  const throwError = (msg) => {
+    setErrorMessage(msg);
+    setTimeout(() => setErrorMessage(null), 3500);
+  };
 
+  /* ======================================================
+     IMAGE UPLOAD + SAFE CLEANUP
+  ====================================================== */
+  const handleImageLoad = (fileUrl) => {
     const img = new Image();
-    img.src = image;
+    img.src = fileUrl;
 
     img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+      setImage(fileUrl);
+      setImageObj(img);
+      img.onload = null; // CLEANUP
+      img.onerror = null; // CLEANUP
+    };
 
-      const size = tileSize === "custom" ? customSize : tileSize;
-
-      const cols = Math.floor(img.width / size);
-      const rows = Math.floor(img.height / size);
-
-      const slicedTiles = [];
-      const newCollisions = {};
-
-      for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-          canvas.width = size;
-          canvas.height = size;
-
-          ctx.clearRect(0, 0, size, size);
-          ctx.drawImage(
-            img,
-            x * size,
-            y * size,
-            size,
-            size,
-            0,
-            0,
-            size,
-            size
-          );
-
-          const tileURL = canvas.toDataURL("image/png");
-          const id = `${x}-${y}`;
-
-          slicedTiles.push({
-            id,
-            index: slicedTiles.length,
-            x,
-            y,
-            size,
-            src: tileURL,
-          });
-
-          newCollisions[id] = "none";
-        }
-      }
-
-      setTiles(slicedTiles);
-      setHoveredTile(null);
-      setCollisions(newCollisions);
+    img.onerror = () => {
+      throwError("Invalid or corrupted image file.");
+      img.onload = null; // CLEANUP
+      img.onerror = null; // CLEANUP
     };
   };
 
-  const effectiveTileSize = tileSize === "custom" ? customSize : tileSize;
+  /* ======================================================
+     TILE SLICING
+  ====================================================== */
+  const handleSlice = () => {
+    if (!imageObj) {
+      throwError("No image loaded.");
+      return;
+    }
 
-  /* ================================
-       EXPORT JSON
-  ================================== */
+    const size = tileSize === "custom" ? customSize : tileSize;
+
+    // SAFETY CHECK — Image too large
+    if (imageObj.width > 8192 || imageObj.height > 8192) {
+      throwError("Image is too large. Max allowed size is 8192x8192.");
+      return;
+    }
+
+    // SAFETY CHECK — Not divisible
+    if (imageObj.width % size !== 0 || imageObj.height % size !== 0) {
+      throwError(
+        `Image size is not divisible by ${size}px. Choose a matching tile size.`
+      );
+      return;
+    }
+
+    setLoading(true);
+
+    setTimeout(() => {
+      try {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        const cols = imageObj.width / size;
+        const rows = imageObj.height / size;
+
+        const slicedTiles = [];
+        const newCollisions = {};
+
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+            canvas.width = size;
+            canvas.height = size;
+
+            ctx.clearRect(0, 0, size, size);
+            ctx.drawImage(
+              imageObj,
+              x * size,
+              y * size,
+              size,
+              size,
+              0,
+              0,
+              size,
+              size
+            );
+
+            const tileURL = canvas.toDataURL("image/png");
+            const id = `${x}-${y}`;
+
+            slicedTiles.push({
+              id,
+              index: slicedTiles.length,
+              x,
+              y,
+              size,
+              src: tileURL,
+            });
+
+            newCollisions[id] = "none";
+          }
+        }
+
+        setTiles(slicedTiles);
+        setHoveredTile(null);
+        setCollisions(newCollisions);
+
+        canvas.remove(); // CLEANUP
+      } catch (e) {
+        throwError("Failed to slice the image.");
+      }
+
+      setLoading(false);
+    }, 200);
+  };
+
+  const effectiveTileSize =
+    tileSize === "custom" ? customSize : tileSize;
+
+  /* ======================================================
+     EXPORT JSON
+  ====================================================== */
   const handleExportJSON = () => {
-    if (tiles.length === 0) return;
+    if (!tiles.length) return;
 
     const json = tiles.map((tile) => ({
       id: tile.index,
@@ -118,40 +179,38 @@ export default function App() {
     a.download = "tileset-data.json";
     a.click();
 
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(url); // CLEANUP
   };
 
-  /* ================================
-       EXPORT PNG
-  ================================== */
+  /* ======================================================
+     EXPORT PNG
+  ====================================================== */
   const handleExportPNG = () => {
-    if (!image) return;
+    if (!imageObj) return;
 
-    const img = new Image();
-    img.src = image;
+    const canvas = document.createElement("canvas");
+    canvas.width = imageObj.width;
+    canvas.height = imageObj.height;
 
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(imageObj, 0, 0);
 
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
 
-      canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "tileset.png";
-        a.click();
-        URL.revokeObjectURL(url);
-      });
-    };
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "tileset.png";
+      a.click();
+
+      URL.revokeObjectURL(url); // CLEANUP
+      canvas.remove(); // CLEANUP
+    });
   };
 
-  /* ================================
-       EXPORT MANIFEST (UNITY + GODOT)
-  ================================== */
+  /* ======================================================
+     EXPORT MANIFEST (Unity + Godot)
+  ====================================================== */
   const handleExportManifest = () => {
     if (!tiles.length) return;
 
@@ -172,8 +231,7 @@ export default function App() {
       })),
     };
 
-    const godotTres =
-`[resource]
+    const godotTres = `[resource]
 resource_name = "TilesetAtlas"
 tile_size = ${size}
 tiles = [
@@ -186,38 +244,35 @@ ${tiles
 ]`;
 
     const zip = new JSZip();
-
     zip.file("unity/spriteatlas.json", JSON.stringify(unityAtlas, null, 2));
     zip.file("godot/atlas_texture.tres", godotTres);
 
     zip.generateAsync({ type: "blob" }).then((zipFile) => {
       const url = URL.createObjectURL(zipFile);
+
       const a = document.createElement("a");
       a.href = url;
       a.download = "tileset_manifest.zip";
       a.click();
-      URL.revokeObjectURL(url);
+
+      URL.revokeObjectURL(url); // CLEANUP
     });
   };
 
-  /* ================================
-       EXPORT ZIP COMPLET
-  ================================== */
+  /* ======================================================
+     EXPORT FULL ZIP
+  ====================================================== */
   const handleExportZIP = async () => {
-    if (!image || tiles.length === 0) return;
+    if (!imageObj || !tiles.length) return;
 
     const zip = new JSZip();
 
-    const img = new Image();
-    img.src = image;
-    await new Promise((resolve) => (img.onload = resolve));
-
     const canvas = document.createElement("canvas");
-    canvas.width = img.width;
-    canvas.height = img.height;
+    canvas.width = imageObj.width;
+    canvas.height = imageObj.height;
 
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0);
+    ctx.drawImage(imageObj, 0, 0);
 
     const tilesetBlob = await new Promise((resolve) =>
       canvas.toBlob(resolve, "image/png")
@@ -245,46 +300,40 @@ ${tiles
 
     zip.generateAsync({ type: "blob" }).then((zipFile) => {
       const url = URL.createObjectURL(zipFile);
+
       const a = document.createElement("a");
       a.href = url;
       a.download = "tileset_export.zip";
       a.click();
-      URL.revokeObjectURL(url);
+
+      URL.revokeObjectURL(url); // CLEANUP
+      canvas.remove(); // CLEANUP
     });
   };
 
-  /* ================================
-       COLLISION HANDLER
-  ================================== */
+  /* ======================================================
+     COLLISION CHANGE
+  ====================================================== */
   const handleCollisionChange = (tileId, type) => {
-    setCollisions((prev) => ({
-      ...prev,
-      [tileId]: type,
-    }));
+    setCollisions((prev) => ({ ...prev, [tileId]: type }));
   };
 
-  /* ================================
-       SPLASH SCREEN
-  ================================== */
-if (showSplash) {
+  /* ======================================================
+     SPLASH SCREEN
+  ====================================================== */
+  if (showSplash) {
     return (
       <div className="splash-screen">
-
-        {/* LOGO */}
-        <img
-          src="/assets/logo.png"
-          alt="Tileset Manager Logo"
-          className="splash-logo"
-        />
+        <img src="/assets/logo.png" alt="logo" className="splash-logo" />
 
         <h1 className="splash-title">PIXENO</h1>
-        <p className="splash-subtitle">A Tileset Manager</p>
+        <p className="splash-subtitle">Tileset Manager</p>
 
         <div className="splash-info">
-          <p>• Slice Tiles</p>
-          <p>• Export PNG / JSON / ZIP / MANIFEST</p>
-          <p>• Add Collisions</p>
-          <p>• Unity / Godot Compatible</p>
+          <p>• Slice tiles</p>
+          <p>• Export PNG / JSON / ZIP / Manifest</p>
+          <p>• Collision Editor</p>
+          <p>• Unity / Godot Tools</p>
         </div>
 
         <button className="splash-btn" onClick={() => setShowSplash(false)}>
@@ -294,96 +343,109 @@ if (showSplash) {
         <div className="crt-effect"></div>
       </div>
     );
-}
+  }
 
-
-  /* ================================
-       MAIN UI
-  ================================== */
+  /* ======================================================
+     MAIN UI
+  ====================================================== */
   return (
-    <div className="app">
-<header className="app-header">
-  <div className="app-logo-title">
-      <img src="/assets/logo.png" alt="logo" className="header-logo" />
-      <h1 className="title">Tileset Manager</h1>
-  </div>
+    <>
+      {errorMessage && <div className="error-toast">{errorMessage}</div>}
 
-  <p className="subtitle">
-    Import, slice, inspect and tag tiles with collision data.
-  </p>
-
-  <div className="gba-toggle-wrapper">
-    <div
-      className="gba-toggle"
-      onClick={() => {
-        const isLight = document.body.classList.toggle("theme-light");
-        localStorage.setItem("gba-theme", isLight ? "light" : "dark");
-      }}
-    >
-      <div className="gba-toggle-slider"></div>
-    </div>
-  </div>
-</header>
-
-
-      <Dropzone setImage={setImage} />
-
-      {image && (
-        <div className="panels-row">
-          <TileOptions
-            tileSize={tileSize}
-            setTileSize={setTileSize}
-            customSize={customSize}
-            setCustomSize={setCustomSize}
-            handleSlice={handleSlice}
-          />
-
-          <ZoomControls
-            zoom={zoom}
-            setZoom={setZoom}
-            showGrid={showGrid}
-            setShowGrid={setShowGrid}
-          />
+      {loading && (
+        <div className="loader-screen">
+          <div className="loader-title">Processing tiles</div>
+          <div className="loader-dots">
+            <div className="loader-dot"></div>
+            <div className="loader-dot"></div>
+            <div className="loader-dot"></div>
+          </div>
         </div>
       )}
 
-      {tiles.length > 0 && (
-        <div className="export-row">
-          <button className="btn-export" onClick={handleExportJSON}>
-            Export JSON
-          </button>
-          <button className="btn-export" onClick={handleExportPNG}>
-            Export PNG
-          </button>
-          <button className="btn-export" onClick={handleExportZIP}>
-            Export ZIP
-          </button>
-          <button className="btn-export" onClick={handleExportManifest}>
-            Export Manifest
-          </button>
-        </div>
-      )}
+      <div className="app">
+        <header className="app-header">
+          <div className="app-logo-title">
+            <img src="/assets/logo.png" alt="logo" className="header-logo" />
+            <h1 className="title">Tileset Manager</h1>
+          </div>
 
-      {tiles.length > 0 && (
-        <div className="workspace">
-          <TileGrid
-            tiles={tiles}
-            zoom={zoom}
-            showGrid={showGrid}
-            onTileHover={setHoveredTile}
-            onTileSelect={setSelectedTile}
-            tileSize={effectiveTileSize}
-            collisions={collisions}
-          />
+          <p className="subtitle">
+            Import, slice, inspect and tag tiles with collision data.
+          </p>
 
-          <TileInfoPanel
-            tile={selectedTile || hoveredTile}
-            tileSize={effectiveTileSize}
-            collisions={collisions}
-            onCollisionChange={handleCollisionChange}
-          />
-        </div>
-      )}
-    </div>
+          <div className="gba-toggle-wrapper">
+            <div
+              className="gba-toggle"
+              onClick={() => {
+                const isLight = document.body.classList.toggle("theme-light");
+                localStorage.setItem("gba-theme", isLight ? "light" : "dark");
+              }}
+            >
+              <div className="gba-toggle-slider"></div>
+            </div>
+          </div>
+        </header>
+
+        <Dropzone setImage={handleImageLoad} />
+
+        {image && (
+          <div className="panels-row">
+            <TileOptions
+              tileSize={tileSize}
+              setTileSize={setTileSize}
+              customSize={customSize}
+              setCustomSize={setCustomSize}
+              handleSlice={handleSlice}
+            />
+
+            <ZoomControls
+              zoom={zoom}
+              setZoom={setZoom}
+              showGrid={showGrid}
+              setShowGrid={setShowGrid}
+            />
+          </div>
+        )}
+
+        {tiles.length > 0 && (
+          <div className="export-row">
+            <button className="btn-export" onClick={handleExportJSON}>
+              Export JSON
+            </button>
+            <button className="btn-export" onClick={handleExportPNG}>
+              Export PNG
+            </button>
+            <button className="btn-export" onClick={handleExportZIP}>
+              Export ZIP
+            </button>
+            <button className="btn-export" onClick={handleExportManifest}>
+              Export Manifest
+            </button>
+          </div>
+        )}
+
+        {tiles.length > 0 && (
+          <div className="workspace">
+            <TileGrid
+              tiles={tiles}
+              zoom={zoom}
+              showGrid={showGrid}
+              onTileHover={setHoveredTile}
+              onTileSelect={setSelectedTile}
+              tileSize={effectiveTileSize}
+              collisions={collisions}
+            />
+
+            <TileInfoPanel
+              tile={selectedTile || hoveredTile}
+              tileSize={effectiveTileSize}
+              collisions={collisions}
+              onCollisionChange={handleCollisionChange}
+            />
+          </div>
+        )}
+      </div>
+    </>
   );
 }

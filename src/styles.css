@@ -79,7 +79,7 @@ body {
   color: var(--text-main);
 }
 
-/* scanlines plus soft en light mode */
+
 body.theme-light {
   background:
     repeating-linear-gradient(
@@ -691,7 +691,7 @@ body.theme-light .gba-toggle-slider {
   border-color: #312e81; /* couleur par défaut */
 }
 .tile-preview[data-collision="hazard"] {
-  border-color: #7d614c; /* couleur par défaut */
+  border-color: #7d614c; 
 }
 
 /* ================================
@@ -808,6 +808,66 @@ body.theme-light .gba-toggle-slider {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+/* ================================
+   LOADER SCREEN (GBA STYLE)
+=================================== */
+
+.loader-screen {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 0, 20, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.loader-title {
+  font-family: "Press Start 2P", monospace;
+  color: #c4b5fd;
+  text-shadow: 0 0 10px rgba(162, 122, 255, 0.6);
+  font-size: 14px;
+  margin-bottom: 18px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.loader-dots {
+  display: flex;
+  gap: 10px;
+}
+
+.loader-dot {
+  width: 8px;
+  height: 8px;
+  background: #a78bfa;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.6);
+  opacity: 0;
+  animation: dotBlink 1.4s infinite;
+}
+
+.loader-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loader-dot:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.loader-dot:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+@keyframes dotBlink {
+  0% { opacity: 0; transform: scale(0.6); }
+  50% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.6); }
 }
 
 
