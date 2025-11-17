@@ -622,3 +622,84 @@ body.theme-light .gba-toggle-slider {
   border-color: #94a3b8;
 }
 
+/* ================================
+   COLLISION EDITOR UI
+=================================== */
+
+.collision-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.collision-chip {
+  padding: 4px 8px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background: var(--bg-panel-soft);
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+}
+
+.collision-chip:hover {
+  transform: translateY(-1px);
+  border-color: var(--gba-purple-light);
+}
+
+.collision-chip.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text-main);
+}
+
+/* ================================
+   COLLISION COLORS ON TILES
+=================================== */
+
+/* Base tile style */
+.tile-preview {
+  background: #050114;
+  border-radius: 12px;
+  border: 2px solid #312e81;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.1s ease;
+}
+
+/* Highlight sélection */
+.tile-preview.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  transform: scale(1.03);
+}
+
+/* Collision types (bordure seulement) */
+.tile-preview[data-collision="solid"] {
+  border-color: #ef4444 !important; /* rouge */
+}
+
+.tile-preview[data-collision="platform"] {
+  border-color: #f59e0b !important; /* orange */
+}
+
+.tile-preview[data-collision="ladder"] {
+  border-color: #3b82f6 !important; /* bleu */
+}
+
+.tile-preview[data-collision="water"] {
+  border-color: #06b6d4 !important; /* cyan */
+}
+
+.tile-preview[data-collision="none"] {
+  border-color: #312e81; /* couleur par défaut */
+}
+
+

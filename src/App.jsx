@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Dropzone from "./components/Dropzone";
 import TileOptions from "./components/TileOptions";
 import TileGrid from "./components/TileGrid";
@@ -16,6 +16,19 @@ export default function App() {
   const [zoom, setZoom] = useState(1);
   const [showGrid, setShowGrid] = useState(true);
   const [hoveredTile, setHoveredTile] = useState(null);
+  const [selectedTile, setSelectedTile] = useState(null);
+
+
+  // 🎯 Collision par tile : { [tile.id]: "solid" | "none" | ... }
+  const [collisions, setCollisions] = useState({});
+
+  // Charger le thème à partir du localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("gba-theme");
+    if (saved === "light") {
+      document.body.classList.add("theme-light");
+    }
+  }, []);
 
   /* ================================
       TILE SLICING
@@ -36,6 +49,7 @@ export default function App() {
       const rows = Math.floor(img.height / size);
 
       const slicedTiles = [];
+      const newCollisions = {};
 
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
@@ -56,20 +70,25 @@ export default function App() {
           );
 
           const tileURL = canvas.toDataURL("image/png");
+          const id = `${x}-${y}`;
 
           slicedTiles.push({
-            id: `${x}-${y}`,
+            id,
             index: slicedTiles.length,
             x,
             y,
             size,
             src: tileURL,
           });
+
+          // Par défaut : pas de collision
+          newCollisions[id] = "none";
         }
       }
 
       setTiles(slicedTiles);
       setHoveredTile(null);
+      setCollisions(newCollisions);
     };
   };
 
@@ -87,6 +106,7 @@ export default function App() {
       x: tile.x,
       y: tile.y,
       size: tile.size,
+      collision: collisions[tile.id] || "none",
       src: tile.src,
     }));
 
@@ -133,15 +153,6 @@ export default function App() {
   };
 
   /* ================================
-      EXPORT ZIP
-  ================================== */
-  const saveBlobInZip = async (zip, path, dataUrl) => {
-    const response = await fetch(dataUrl);
-    const blob = await response.blob();
-    zip.file(path, blob);
-  };
-
-  /* ================================
       EXPORT MANIFEST (UNITY + GODOT)
   ================================== */
   const handleExportManifest = () => {
@@ -153,34 +164,37 @@ export default function App() {
     const unityAtlas = {
       name: "TilesetAtlas",
       tileSize: size,
-      columns: Math.max(...tiles.map(t => t.x)) + 1,
-      rows: Math.max(...tiles.map(t => t.y)) + 1,
-      sprites: tiles.map(tile => ({
+      columns: Math.max(...tiles.map((t) => t.x)) + 1,
+      rows: Math.max(...tiles.map((t) => t.y)) + 1,
+      sprites: tiles.map((tile) => ({
         name: `tile_${tile.x}_${tile.y}`,
         x: tile.x * size,
         y: tile.y * size,
         w: size,
         h: size,
+        collision: collisions[tile.id] || "none",
       })),
     };
 
-    // GODOT TRES (AtlasTexture)
+    // GODOT TRES (AtlasTexture) – simple manifest
     const godotTres =
 `[resource]
 resource_name = "TilesetAtlas"
-atlas = ExtResource( 1 )
-region = Rect2( 0, 0, ${size}, ${size} )
-filter_clip = true`;
+tile_size = ${size}
+tiles = [
+${tiles
+  .map((tile) => {
+    const c = collisions[tile.id] || "none";
+    return `  { x = ${tile.x}, y = ${tile.y}, w = ${size}, h = ${size}, collision = "${c}" }`;
+  })
+  .join(",\n")}
+]`;
 
     const zip = new JSZip();
 
-    // Unity folder
     zip.file("unity/spriteatlas.json", JSON.stringify(unityAtlas, null, 2));
-
-    // Godot folder
     zip.file("godot/atlas_texture.tres", godotTres);
 
-    // Download ZIP
     zip.generateAsync({ type: "blob" }).then((zipFile) => {
       const url = URL.createObjectURL(zipFile);
       const a = document.createElement("a");
@@ -192,13 +206,14 @@ filter_clip = true`;
   };
 
   /* ================================
-       EXPORT ZIP COMPLETE
+       EXPORT ZIP COMPLET
   ================================== */
   const handleExportZIP = async () => {
     if (!image || tiles.length === 0) return;
 
     const zip = new JSZip();
 
+    // full tileset
     const img = new Image();
     img.src = image;
     await new Promise((resolve) => (img.onload = resolve));
@@ -222,6 +237,7 @@ filter_clip = true`;
       x: tile.x,
       y: tile.y,
       size: tile.size,
+      collision: collisions[tile.id] || "none",
     }));
 
     zip.file("tileset-data.json", JSON.stringify(json, null, 2));
@@ -246,13 +262,27 @@ filter_clip = true`;
   };
 
   /* ================================
+       COLLISION HANDLER
+  ================================== */
+  const handleCollisionChange = (tileId, type) => {
+    setCollisions((prev) => ({
+      ...prev,
+      [tileId]: type,
+    }));
+  };
+
+
+
+  /* ================================
        UI RENDER
   ================================== */
   return (
     <div className="app">
       <header className="app-header">
         <h1 className="title">Tileset Manager</h1>
-        <p className="subtitle">Import, slice and inspect your tilesets.</p>
+        <p className="subtitle">
+          Import, slice, inspect and tag tiles with collision data.
+        </p>
 
         <div className="gba-toggle-wrapper">
           <div
@@ -294,15 +324,12 @@ filter_clip = true`;
           <button className="btn-export" onClick={handleExportJSON}>
             Export JSON
           </button>
-
           <button className="btn-export" onClick={handleExportPNG}>
             Export PNG
           </button>
-
           <button className="btn-export" onClick={handleExportZIP}>
             Export ZIP
           </button>
-
           <button className="btn-export" onClick={handleExportManifest}>
             Export Manifest
           </button>
@@ -316,11 +343,15 @@ filter_clip = true`;
             zoom={zoom}
             showGrid={showGrid}
             onTileHover={setHoveredTile}
+            onTileSelect={setSelectedTile}
             tileSize={effectiveTileSize}
+            collisions={collisions}
           />
           <TileInfoPanel
-            tile={hoveredTile}
+            tile={selectedTile || hoveredTile}
             tileSize={effectiveTileSize}
+            collisions={collisions}
+            onCollisionChange={handleCollisionChange}
           />
         </div>
       )}

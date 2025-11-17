@@ -5,32 +5,47 @@ export default function TileGrid({
   zoom,
   showGrid,
   onTileHover,
+  onTileSelect,
   tileSize,
+  collisions,
+  selectedTile,
 }) {
+  const scale = zoom || 1;
+
   return (
-    <div className="tile-grid-wrapper pixel-panel">
-<h2 className="gba-title">Tiles</h2>
+    <div className="tile-grid-wrapper">
       <div
-        className={`tile-grid ${showGrid ? "tile-grid--grid" : ""}`}
+        className="tile-grid"
         style={{
-          transform: `scale(${zoom})`,
-          transformOrigin: "top left",
+          gridTemplateColumns: `repeat(auto-fill, ${tileSize * scale + 8}px)`,
         }}
-        onMouseLeave={() => onTileHover(null)}
       >
-        {tiles.map((t, index) => (
-          <div
-            className="tile-preview"
-            key={t.id}
-            onMouseEnter={() => onTileHover({ ...t, index })}
-          >
-            <img src={t.src} alt={`tile-${t.x}-${t.y}`} />
-          </div>
-        ))}
+        {tiles.map((tile) => {
+          const collisionType = collisions[tile.id] || "none";
+          const isSelected = selectedTile?.id === tile.id;
+
+          return (
+            <div
+              key={tile.id}
+              className={`tile-preview ${isSelected ? "is-selected" : ""}`}
+              data-collision={collisionType}
+              onMouseEnter={() => onTileHover(tile)}
+              onMouseLeave={() => onTileHover(null)}
+              onClick={() => onTileSelect(tile)}
+            >
+              <img
+                src={tile.src}
+                alt={tile.id}
+                style={{
+                  width: tileSize * scale,
+                  height: tileSize * scale,
+                  imageRendering: "pixelated",
+                }}
+              />
+            </div>
+          );
+        })}
       </div>
-      <p className="tile-grid-hint">
-        Hover a tile to see its details. Use zoom to inspect closely.
-      </p>
     </div>
   );
 }
