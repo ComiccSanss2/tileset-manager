@@ -6,7 +6,7 @@ import TileInfoPanel from "./components/TileInfoPanel";
 import ZoomControls from "./components/ZoomControls";
 import JSZip from "jszip";
 import "./styles.css";
-import logo from "./assets/logo.png";
+import logo from "./public/logo.png";
 
 export default function App() {
   const [image, setImage] = useState(null);
@@ -315,7 +315,7 @@ ${tiles
         <img src={logo} alt="logo" className="splash-logo" />
 
         <h1 className="splash-title">PIXENO</h1>
-        <p className="splash-subtitle">Tileset Manager</p>
+        <p className="splash-subtitle">A Tileset Manager</p>
 
         <div className="splash-info">
           <p>• Slice tiles</p>
