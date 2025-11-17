@@ -59,6 +59,7 @@ export default function App() {
 
           slicedTiles.push({
             id: `${x}-${y}`,
+            index: slicedTiles.length,
             x,
             y,
             size,
@@ -81,8 +82,8 @@ export default function App() {
   const handleExportJSON = () => {
     if (tiles.length === 0) return;
 
-    const json = tiles.map((tile, index) => ({
-      id: index,
+    const json = tiles.map((tile) => ({
+      id: tile.index,
       x: tile.x,
       y: tile.y,
       size: tile.size,
@@ -132,14 +133,72 @@ export default function App() {
   };
 
   /* ================================
-       EXPORT ZIP (Commit #6)
+      EXPORT ZIP
+  ================================== */
+  const saveBlobInZip = async (zip, path, dataUrl) => {
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    zip.file(path, blob);
+  };
+
+  /* ================================
+      EXPORT MANIFEST (UNITY + GODOT)
+  ================================== */
+  const handleExportManifest = () => {
+    if (!tiles.length) return;
+
+    const size = effectiveTileSize;
+
+    // UNITY SPRITE ATLAS JSON
+    const unityAtlas = {
+      name: "TilesetAtlas",
+      tileSize: size,
+      columns: Math.max(...tiles.map(t => t.x)) + 1,
+      rows: Math.max(...tiles.map(t => t.y)) + 1,
+      sprites: tiles.map(tile => ({
+        name: `tile_${tile.x}_${tile.y}`,
+        x: tile.x * size,
+        y: tile.y * size,
+        w: size,
+        h: size,
+      })),
+    };
+
+    // GODOT TRES (AtlasTexture)
+    const godotTres =
+`[resource]
+resource_name = "TilesetAtlas"
+atlas = ExtResource( 1 )
+region = Rect2( 0, 0, ${size}, ${size} )
+filter_clip = true`;
+
+    const zip = new JSZip();
+
+    // Unity folder
+    zip.file("unity/spriteatlas.json", JSON.stringify(unityAtlas, null, 2));
+
+    // Godot folder
+    zip.file("godot/atlas_texture.tres", godotTres);
+
+    // Download ZIP
+    zip.generateAsync({ type: "blob" }).then((zipFile) => {
+      const url = URL.createObjectURL(zipFile);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "tileset_manifest.zip";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  };
+
+  /* ================================
+       EXPORT ZIP COMPLETE
   ================================== */
   const handleExportZIP = async () => {
     if (!image || tiles.length === 0) return;
 
     const zip = new JSZip();
 
-    // --- 1. Save full tileset image ---
     const img = new Image();
     img.src = image;
     await new Promise((resolve) => (img.onload = resolve));
@@ -157,9 +216,9 @@ export default function App() {
 
     zip.file("tileset.png", tilesetBlob);
 
-    // --- 2. Save JSON metadata ---
-    const json = tiles.map((tile, index) => ({
-      id: index,
+    // JSON metadata
+    const json = tiles.map((tile) => ({
+      id: tile.index,
       x: tile.x,
       y: tile.y,
       size: tile.size,
@@ -167,7 +226,7 @@ export default function App() {
 
     zip.file("tileset-data.json", JSON.stringify(json, null, 2));
 
-    // --- 3. Save individual tiles ---
+    // individual tiles
     const folder = zip.folder("tiles");
 
     for (const tile of tiles) {
@@ -176,7 +235,6 @@ export default function App() {
       folder.file(`${tile.x}-${tile.y}.png`, blob);
     }
 
-    // --- 4. Download ZIP ---
     zip.generateAsync({ type: "blob" }).then((zipFile) => {
       const url = URL.createObjectURL(zipFile);
       const a = document.createElement("a");
@@ -195,17 +253,19 @@ export default function App() {
       <header className="app-header">
         <h1 className="title">Tileset Manager</h1>
         <p className="subtitle">Import, slice and inspect your tilesets.</p>
-  <div className="gba-toggle-wrapper">
-    <div
-      className="gba-toggle"
-      onClick={() => {
-        const isLight = document.body.classList.toggle("theme-light");
-        localStorage.setItem("gba-theme", isLight ? "light" : "dark");
-      }}
-    >
-      <div className="gba-toggle-slider"></div>
-    </div>
-  </div>
+
+        <div className="gba-toggle-wrapper">
+          <div
+            className="gba-toggle"
+            onClick={() => {
+              const isLight =
+                document.body.classList.toggle("theme-light");
+              localStorage.setItem("gba-theme", isLight ? "light" : "dark");
+            }}
+          >
+            <div className="gba-toggle-slider"></div>
+          </div>
+        </div>
       </header>
 
       <Dropzone setImage={setImage} />
@@ -229,17 +289,22 @@ export default function App() {
         </div>
       )}
 
-      {/* 🔧 Export buttons */}
       {tiles.length > 0 && (
         <div className="export-row">
           <button className="btn-export" onClick={handleExportJSON}>
             Export JSON
           </button>
+
           <button className="btn-export" onClick={handleExportPNG}>
             Export PNG
           </button>
+
           <button className="btn-export" onClick={handleExportZIP}>
             Export ZIP
+          </button>
+
+          <button className="btn-export" onClick={handleExportManifest}>
+            Export Manifest
           </button>
         </div>
       )}
@@ -253,7 +318,10 @@ export default function App() {
             onTileHover={setHoveredTile}
             tileSize={effectiveTileSize}
           />
-          <TileInfoPanel tile={hoveredTile} tileSize={effectiveTileSize} />
+          <TileInfoPanel
+            tile={hoveredTile}
+            tileSize={effectiveTileSize}
+          />
         </div>
       )}
     </div>
