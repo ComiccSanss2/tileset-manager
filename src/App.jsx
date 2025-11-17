@@ -4,6 +4,7 @@ import TileOptions from "./components/TileOptions";
 import TileGrid from "./components/TileGrid";
 import TileInfoPanel from "./components/TileInfoPanel";
 import ZoomControls from "./components/ZoomControls";
+import JSZip from "jszip";
 import "./styles.css";
 
 export default function App() {
@@ -17,7 +18,7 @@ export default function App() {
   const [hoveredTile, setHoveredTile] = useState(null);
 
   /* ================================
-      🔪 HANDLE TILE SLICING
+      TILE SLICING
   ================================== */
   const handleSlice = () => {
     if (!image) return;
@@ -71,10 +72,11 @@ export default function App() {
     };
   };
 
-  const effectiveTileSize = tileSize === "custom" ? customSize : tileSize;
+  const effectiveTileSize =
+    tileSize === "custom" ? customSize : tileSize;
 
   /* ================================
-      📤 EXPORT: JSON
+       EXPORT JSON
   ================================== */
   const handleExportJSON = () => {
     if (tiles.length === 0) return;
@@ -84,7 +86,7 @@ export default function App() {
       x: tile.x,
       y: tile.y,
       size: tile.size,
-      src: tile.src, // dataURL (optionnel)
+      src: tile.src,
     }));
 
     const blob = new Blob([JSON.stringify(json, null, 2)], {
@@ -102,7 +104,7 @@ export default function App() {
   };
 
   /* ================================
-      📤 EXPORT: PNG
+       EXPORT PNG
   ================================== */
   const handleExportPNG = () => {
     if (!image) return;
@@ -130,7 +132,63 @@ export default function App() {
   };
 
   /* ================================
-      🖥️ RENDER
+       EXPORT ZIP (Commit #6)
+  ================================== */
+  const handleExportZIP = async () => {
+    if (!image || tiles.length === 0) return;
+
+    const zip = new JSZip();
+
+    // --- 1. Save full tileset image ---
+    const img = new Image();
+    img.src = image;
+    await new Promise((resolve) => (img.onload = resolve));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+
+    const tilesetBlob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, "image/png")
+    );
+
+    zip.file("tileset.png", tilesetBlob);
+
+    // --- 2. Save JSON metadata ---
+    const json = tiles.map((tile, index) => ({
+      id: index,
+      x: tile.x,
+      y: tile.y,
+      size: tile.size,
+    }));
+
+    zip.file("tileset-data.json", JSON.stringify(json, null, 2));
+
+    // --- 3. Save individual tiles ---
+    const folder = zip.folder("tiles");
+
+    for (const tile of tiles) {
+      const res = await fetch(tile.src);
+      const blob = await res.blob();
+      folder.file(`${tile.x}-${tile.y}.png`, blob);
+    }
+
+    // --- 4. Download ZIP ---
+    zip.generateAsync({ type: "blob" }).then((zipFile) => {
+      const url = URL.createObjectURL(zipFile);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "tileset_export.zip";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  };
+
+  /* ================================
+       UI RENDER
   ================================== */
   return (
     <div className="app">
@@ -168,6 +226,9 @@ export default function App() {
           </button>
           <button className="btn-export" onClick={handleExportPNG}>
             Export PNG
+          </button>
+          <button className="btn-export" onClick={handleExportZIP}>
+            Export ZIP
           </button>
         </div>
       )}
